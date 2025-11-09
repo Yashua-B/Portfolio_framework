@@ -427,10 +427,6 @@ function loadImageSequential(src, pageNumber, index) {
         img.className = 'portfolio-image';
         img.decoding = 'async';
         
-        if (index > 1) {
-            img.loading = 'lazy';
-        }
-        
         img.onload = () => resolve(img);
         img.onerror = (event) => reject(event);
         img.src = src;
