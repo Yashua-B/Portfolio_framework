@@ -1,0 +1,329 @@
+/* ===== RESET & BASE STYLES ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+    background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    color: #333;
+    line-height: 1.6;
+}
+
+/* ===== PORTFOLIO CONTAINER ===== */
+.portfolio-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+/* ===== PORTFOLIO PAGES ===== */
+.portfolio-page {
+    position: relative;
+    margin: 0 auto 60px;
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Animation: Start invisible */
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+/* Fade-in animation when scrolled into view */
+.portfolio-page.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Hover effect - subtle lift */
+.portfolio-page:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+}
+
+.portfolio-page img {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+
+/* ===== YOUTUBE HOTSPOT (Clickable Area) ===== */
+.youtube-hotspot {
+    /* Positioning controlled dynamically by JavaScript */
+    position: absolute;
+    cursor: pointer;
+    z-index: 10;
+    /* Position and size will be set inline by JavaScript based on image dimensions */
+}
+
+/* Focus styles for keyboard navigation */
+.youtube-hotspot:focus {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+}
+
+.youtube-hotspot:focus-visible {
+    outline: 3px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* Remove focus outline when using mouse */
+.youtube-hotspot:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* SVG container for border animation */
+.hotspot-border {
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    width: calc(100% + 4px);
+    height: calc(100% + 4px);
+    pointer-events: none;
+    opacity: 0;
+}
+
+/* SVG rectangle stroke */
+.border-rect {
+    width: calc(100% - 2px);
+    height: calc(100% - 2px);
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.6);
+    stroke-width: 2;
+    /* stroke-dasharray and stroke-dashoffset set dynamically by JavaScript */
+}
+
+/* Discovery animation - line revolves once */
+.youtube-hotspot.discover .hotspot-border {
+    opacity: 1;
+}
+
+.youtube-hotspot.discover .border-rect {
+    animation: revolveBorder 3s linear 1;
+}
+
+/* Hover animation - revolves continuously */
+.youtube-hotspot:hover .hotspot-border {
+    opacity: 1;
+}
+
+.youtube-hotspot:hover .border-rect {
+    animation: revolveBorder 3s linear infinite;
+}
+
+/* Clockwise revolving animation */
+@keyframes revolveBorder {
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* ===== MODAL (YouTube Video Popup) ===== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    position: relative;
+    width: 90%;
+    max-width: 1000px;
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10000;
+}
+
+/* Close button */
+.modal-close {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 40px;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    z-index: 10001;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    transform: scale(1.2) rotate(90deg);
+}
+
+.modal-close:focus {
+    outline: 3px solid #007bff;
+    outline-offset: 4px;
+}
+
+.modal-close:focus-visible {
+    outline: 3px solid #007bff;
+    outline-offset: 4px;
+}
+
+.modal-close:focus:not(:focus-visible) {
+    outline: none;
+}
+
+/* Video container - maintains 16:9 aspect ratio */
+.video-container {
+    position: relative;
+    width: 100%;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+}
+
+.video-container iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+
+/* Tablet styles */
+@media (max-width: 1024px) {
+    .portfolio-container {
+        padding: 30px 15px;
+    }
+    
+    .portfolio-page {
+        margin-bottom: 50px;
+    }
+    
+    .modal-content {
+        width: 92%;
+    }
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .portfolio-container {
+        padding: 20px 10px;
+    }
+    
+    .portfolio-page {
+        margin-bottom: 40px;
+        border-radius: 6px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        max-width: none;
+    }
+    
+    .modal-close {
+        top: -50px;
+        font-size: 50px;
+    }
+}
+
+/* Small mobile phones */
+@media (max-width: 480px) {
+    .portfolio-container {
+        padding: 15px 5px;
+    }
+    
+    .portfolio-page {
+        margin-bottom: 30px;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* High-resolution displays */
+@media (min-width: 1920px) {
+    .portfolio-container {
+        max-width: 1600px;
+    }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    html {
+        scroll-behavior: auto;
+    }
+}
+
+/* Print styles */
+@media print {
+    .youtube-hotspot,
+    .modal {
+        display: none;
+    }
+    
+    .portfolio-page {
+        page-break-inside: avoid;
+        box-shadow: none;
+        margin-bottom: 20px;
+    }
+}
+
