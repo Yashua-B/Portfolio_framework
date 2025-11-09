@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Joshua Barzideh's portfolio showcasing selected architecture and design works with interactive video presentations.">
+    <meta name="author" content="Joshua Barzideh">
+    <title>Joshua Barzideh - Selected Works</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="assets/loading/bouncing-dots.css">
+    <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+    <div id="loading-overlay" role="status" aria-live="polite" aria-busy="true">
+        <div class="loader" aria-hidden="true">
+            <span class="ball"></span>
+            <span class="ball"></span>
+            <span class="ball"></span>
+        </div>
+        <p class="loading-overlay-label visually-hidden">Loading content…</p>
+    </div>
+
+    <!-- Main Portfolio Container -->
+    <!-- Pages will be dynamically loaded from the images/ folder -->
+    <main id="main-content">
+        <div class="portfolio-container" id="portfolio-container">
+            <!-- Dynamic content will be inserted here by script.js -->
+        </div>
+    </main>
+
+    <!-- YouTube Modal -->
+    <div id="youtube-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="youtube-modal-title">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h2 id="youtube-modal-title" class="visually-hidden">Video player</h2>
+            <button class="modal-close" aria-label="Close video">&times;</button>
+            <div class="video-container">
+                <iframe id="youtube-player" 
+                        src="" 
+                        title="YouTube video player"
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
+

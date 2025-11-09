@@ -1,0 +1,19 @@
+# Hotspot Configuration File
+# Format: page_number, youtube_url, left%, bottom%, width%, height%
+# 
+# Lines starting with # are comments and will be ignored
+# Just paste the full YouTube link - any format works!
+#
+# Parameters explained:
+# - page_number: Which page to add the hotspot to (starts at 1)
+# - youtube_url: Full YouTube URL (any format: youtube.com/watch?v=, youtu.be/, etc.)
+# - left%: Distance from the left edge of the page (percentage)
+# - bottom%: Distance from the bottom edge of the page (percentage)
+# - width%: Width of the clickable hotspot rectangle (percentage)
+# - height%: Height of the clickable hotspot rectangle (percentage)
+#
+# Example hotspots below (currently matching pages 6 and 7):
+
+6, https://www.youtube.com/watch?v=62AL_IPh8bA, 2.9, 8.6, 4, 11
+7, https://youtu.be/9xRQY97oVTg, 2.9, 8.6, 4, 11
+
