@@ -1,0 +1,28 @@
+# Optional Image Manifest File
+# 
+# If this file exists, the website will load images in the exact order listed here.
+# This is useful if you have images with non-numbered names or want precise control.
+#
+# Format: Just list one filename per line (without the images/ folder path)
+# Lines starting with # are comments and will be ignored
+#
+# Example:
+# my-cover-page.png
+# table-of-contents.png
+# project-alpha.png
+# project-beta.png
+#
+# If you delete this file, the website will automatically discover numbered images instead.
+# Auto-discovery looks for patterns such as page_01, page01, image01, slide01, 01, 001 (with PNG/JPG/JPEG/GIF/WEBP extensions).
+# Current images (using this manifest for descriptive filenames):
+
+page_01.png
+page_02.png
+page_03.png
+page_04.png
+page_05.png
+page_06.png
+page_07.png
+page_08.png
+page_09.png
+
