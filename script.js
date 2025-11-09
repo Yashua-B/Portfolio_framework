@@ -13,6 +13,10 @@ let pageVisibilityObserver;
 let hotspotObserver;
 let animatedHotspots;
 let lastFocusedElement = null;
+const pageReadyResolvers = new Map();
+const pagesInFlight = new Set();
+let allPagesLoaded = false;
+let maxLoadedPageNumber = 0;
 
 // Loader management
 const GLOBAL_LOADER_ID = 'loading-overlay';
@@ -64,11 +68,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Step 1: Load hotspot configurations
         await loadHotspotConfigs();
         
-        // Step 2: Discover and load all images
-        await discoverAndLoadImages();
-        
-        // Step 3: Build the portfolio pages sequentially
-        await buildPortfolioPages();
+        // Step 2 & 3: Progressively render portfolio pages
+        await initializePortfolioPages();
+        setupHashNavigation();
 
     } catch (error) {
         console.error('Error initializing portfolio:', error);
@@ -78,141 +80,311 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 // ===== IMAGE DISCOVERY =====
-// Discovers images either from a manifest file or by auto-detection
-async function discoverAndLoadImages() {
-    // Try manifest file first (easiest for any naming scheme)
-    const manifestImages = await loadFromManifest();
-    if (manifestImages.length > 0) {
-        loadedImages = manifestImages;
-        console.log(`Loaded ${loadedImages.length} images from manifest`);
-        return loadedImages;
+// Discovers images and renders pages progressively so the first page appears immediately
+async function initializePortfolioPages() {
+    const container = document.getElementById('portfolio-container');
+    container.innerHTML = '';
+    hotspotElements = [];
+    
+    const loaderContext = await createImageLoaderContext();
+    if (!loaderContext) {
+        hideGlobalLoader('No portfolio pages found');
+        container.innerHTML = `
+            <div class="page-fallback">
+                <div class="page-fallback-icon">⚠️</div>
+                <p>No portfolio images were found.</p>
+            </div>
+        `;
+        markAllPagesLoaded();
+        return;
     }
     
-    // Fall back to automatic discovery
-    const discoveredImages = await autoDiscoverImages();
-    loadedImages = discoveredImages;
-    console.log(`Auto-discovered ${loadedImages.length} images`);
-    return loadedImages;
+    const firstImage = await loaderContext.next();
+    if (!firstImage) {
+        hideGlobalLoader('No portfolio pages found');
+        container.innerHTML = `
+            <div class="page-fallback">
+                <div class="page-fallback-icon">⚠️</div>
+                <p>No portfolio images were found.</p>
+            </div>
+        `;
+        markAllPagesLoaded();
+        return;
+    }
+    
+    loadedImages = [firstImage];
+    await renderPortfolioPage(firstImage, 0, container);
+    hideGlobalLoader();
+    
+    // Continue loading remaining images in the background
+    backgroundLoadRemainingPages(loaderContext, container, 1).catch(error => {
+        console.error('Error loading remaining portfolio pages:', error);
+    });
 }
 
-// Load images from optional images.txt manifest file
-async function loadFromManifest() {
+async function fetchManifestEntries() {
     try {
         const response = await fetch(IMAGES_MANIFEST);
-        if (!response.ok) return [];
+        if (!response.ok) return null;
         
         const text = await response.text();
-        const lines = text.split('\n')
+        return text.split('\n')
             .map(line => line.trim())
-            .filter(line => line && !line.startsWith('#')); // Skip empty lines and comments
-        
-        const images = [];
-        for (let i = 0; i < lines.length; i++) {
-            const filename = lines[i];
-            const imagePath = IMAGE_FOLDER + filename;
-            
-            if (await imageExists(imagePath)) {
-                images.push({
-                    path: imagePath,
-                    pageNumber: i + 1,
-                    name: filename
-                });
-            } else {
-                console.warn(`Image listed in manifest not found: ${filename}`);
-            }
-        }
-        
-        return images;
+            .filter(line => line && !line.startsWith('#'));
     } catch (error) {
-        return []; // Manifest file doesn't exist, that's okay
+        return null;
     }
 }
 
-// Automatically discover images using only page_##.png pattern with parallel checking
-async function autoDiscoverImages() {
-    const discoveredImages = [];
-    const MAX_PAGES = 100;
-    const BATCH_SIZE = 10; // Check 10 images in parallel at a time
-    const MAX_CONSECUTIVE_FAILURES = 5;
+async function createImageLoaderContext() {
+    const manifestEntries = await fetchManifestEntries();
+    if (manifestEntries && manifestEntries.length > 0) {
+        return createManifestLoader(manifestEntries);
+    }
+    return createAutoLoader();
+}
+
+function createManifestLoader(entries) {
+    let index = 0;
+    let loadedCount = 0;
     
-    let consecutiveFailures = 0;
-    
-    // Process pages in batches for parallel checking
-    for (let batchStart = 1; batchStart <= MAX_PAGES; batchStart += BATCH_SIZE) {
-        const batchEnd = Math.min(batchStart + BATCH_SIZE - 1, MAX_PAGES);
-        const batchPromises = [];
-        
-        // Create promises for all images in this batch
-        for (let i = batchStart; i <= batchEnd; i++) {
-            batchPromises.push(
-                findImageCandidate(i).then(result => ({
-                    exists: Boolean(result),
-                    pageNumber: i,
-                    path: result ? result.path : null,
-                    name: result ? result.name : null
-                }))
-            );
-        }
-        
-        // Wait for all checks in this batch to complete in parallel
-        const batchResults = await Promise.all(batchPromises);
-        
-        // Process results and track consecutive failures
-        for (const result of batchResults) {
-            if (result.exists && result.path && result.name) {
-                discoveredImages.push({
-                    path: result.path,
-                    pageNumber: result.pageNumber,
-                    name: result.name
-                });
-                consecutiveFailures = 0; // Reset counter when we find an image
+    return {
+        mode: 'manifest',
+        async next() {
+            while (index < entries.length) {
+                const filename = entries[index];
+                const pageNumber = index + 1;
+                index++;
+                
+                const imagePath = IMAGE_FOLDER + filename;
+                if (await imageExists(imagePath)) {
+                    loadedCount++;
+                    return {
+                        path: imagePath,
+                        pageNumber,
+                        name: filename
+                    };
+                }
+                
+                console.warn(`Image listed in manifest not found: ${filename}`);
+            }
+            
+            return null;
+        },
+        finalize() {
+            if (loadedCount > 0) {
+                console.log(`Loaded ${loadedCount} images from manifest`);
             } else {
-                // Count consecutive missing pages
-                consecutiveFailures++;
+                console.warn('Manifest found but no valid images were loaded.');
             }
         }
-        
-        // Stop if we've had too many consecutive failures and found at least one image
-        if (consecutiveFailures >= MAX_CONSECUTIVE_FAILURES && discoveredImages.length > 0) {
-            break;
-        }
-    }
+    };
+}
+
+function createAutoLoader() {
+    const MAX_PAGES = 100;
+    const MAX_CONSECUTIVE_FAILURES = 5;
+    let nextPage = 1;
+    let consecutiveFailures = 0;
+    let foundAny = false;
+    let loadedCount = 0;
     
-    // Sort by page number
-    return discoveredImages.sort((a, b) => a.pageNumber - b.pageNumber);
+    return {
+        mode: 'auto',
+        async next() {
+            while (nextPage <= MAX_PAGES) {
+                const currentPage = nextPage;
+                nextPage++;
+                const candidate = await findImageCandidate(currentPage);
+                
+                if (candidate) {
+                    foundAny = true;
+                    consecutiveFailures = 0;
+                    loadedCount++;
+                    return {
+                        path: candidate.path,
+                        pageNumber: currentPage,
+                        name: candidate.name
+                    };
+                }
+                
+                consecutiveFailures++;
+                if (foundAny && consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) {
+                    break;
+                }
+            }
+            
+            return null;
+        },
+        finalize() {
+            if (loadedCount > 0) {
+                console.log(`Auto-discovered ${loadedCount} images`);
+            } else {
+                console.warn('Automatic discovery did not find any images.');
+            }
+        }
+    };
 }
 
 async function findImageCandidate(pageNumber) {
     const paddedTwo = String(pageNumber).padStart(2, '0');
-    const paddedThree = String(pageNumber).padStart(3, '0');
-    const numberVariants = new Set([String(pageNumber), paddedTwo, paddedThree]);
-    const candidateBases = new Set();
-    const prefixes = ['page', 'image', 'slide'];
-    const separators = ['', '_', '-', ' '];
+    const filename = `page_${paddedTwo}.png`;
+    const imagePath = `${IMAGE_FOLDER}${filename}`;
 
-    numberVariants.forEach(num => candidateBases.add(num));
-
-    for (const prefix of prefixes) {
-        for (const separator of separators) {
-            numberVariants.forEach(num => candidateBases.add(`${prefix}${separator}${num}`));
-        }
-    }
-
-    for (const baseName of candidateBases) {
-        for (const extension of SUPPORTED_IMAGE_EXTENSIONS) {
-            const filename = `${baseName}.${extension}`;
-            const imagePath = `${IMAGE_FOLDER}${filename}`;
-            const exists = await imageExists(imagePath);
-            if (exists) {
-                return {
-                    path: imagePath,
-                    name: filename
-                };
-            }
-        }
+    if (await imageExists(imagePath)) {
+        return {
+            path: imagePath,
+            name: filename
+        };
     }
 
     return null;
+}
+
+async function backgroundLoadRemainingPages(loaderContext, container, startIndex) {
+    let renderIndex = startIndex;
+    let imageData;
+    
+    while ((imageData = await loaderContext.next())) {
+        loadedImages.push(imageData);
+        await renderPortfolioPage(imageData, renderIndex, container);
+        renderIndex++;
+    }
+    
+    if (typeof loaderContext.finalize === 'function') {
+        loaderContext.finalize();
+    }
+    
+    markAllPagesLoaded();
+}
+
+async function renderPortfolioPage(imageData, index, container) {
+    pagesInFlight.add(imageData.pageNumber);
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'portfolio-page loading';
+    pageDiv.setAttribute('data-page', imageData.pageNumber);
+    pageDiv.setAttribute('aria-busy', 'true');
+    
+    const skeleton = document.createElement('div');
+    skeleton.className = 'page-skeleton';
+    pageDiv.appendChild(skeleton);
+    container.appendChild(pageDiv);
+    observePageForAnimations(pageDiv);
+    
+    try {
+        const img = await loadImageSequential(imageData.path, imageData.pageNumber, index);
+        img.alt = `Portfolio Page ${imageData.pageNumber}`;
+        
+        pageDiv.classList.remove('loading');
+        pageDiv.setAttribute('aria-busy', 'false');
+        pageDiv.replaceChildren(img);
+        maxLoadedPageNumber = Math.max(maxLoadedPageNumber, imageData.pageNumber);
+        
+        attachHotspotsToPage(pageDiv, imageData.pageNumber);
+        registerPageForHotspotDiscovery(pageDiv);
+        repositionAllHotspots();
+    } catch (error) {
+        console.warn(`Failed to load image: ${imageData.path}`, error);
+        pageDiv.classList.add('load-error');
+        pageDiv.setAttribute('aria-busy', 'false');
+        pageDiv.innerHTML = `
+            <div class="page-fallback">
+                <div class="page-fallback-icon">⚠️</div>
+                <p>Unable to load this page.</p>
+            </div>
+        `;
+    }
+    
+    pagesInFlight.delete(imageData.pageNumber);
+    notifyPageReady(imageData.pageNumber, pageDiv);
+}
+
+function notifyPageReady(pageNumber, pageElement) {
+    const resolvers = pageReadyResolvers.get(pageNumber);
+    if (!resolvers) return;
+    
+    pageReadyResolvers.delete(pageNumber);
+    resolvers.forEach(resolve => resolve(pageElement));
+}
+
+function waitForPageReady(pageNumber) {
+    const existingPage = document.querySelector(`.portfolio-page[data-page="${pageNumber}"]`);
+    if (existingPage && !existingPage.classList.contains('loading')) {
+        return Promise.resolve(existingPage);
+    }
+    
+    if (allPagesLoaded) {
+        return Promise.resolve(null);
+    }
+    
+    return new Promise((resolve) => {
+        if (!pageReadyResolvers.has(pageNumber)) {
+            pageReadyResolvers.set(pageNumber, []);
+        }
+        pageReadyResolvers.get(pageNumber).push((pageElement) => {
+            resolve(pageElement);
+        });
+    });
+}
+
+function markAllPagesLoaded() {
+    if (allPagesLoaded) return;
+    allPagesLoaded = true;
+    
+    pageReadyResolvers.forEach(resolvers => {
+        resolvers.forEach(resolve => resolve(null));
+    });
+    pageReadyResolvers.clear();
+}
+
+async function handlePageNavigationRequest(pageNumber) {
+    if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+        return;
+    }
+    
+    const pageSelector = `.portfolio-page[data-page="${pageNumber}"]`;
+    const existingPage = document.querySelector(pageSelector);
+    if (existingPage && !existingPage.classList.contains('loading')) {
+        existingPage.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+    }
+    
+    let loaderActive = false;
+    const paddedPage = String(pageNumber).padStart(2, '0');
+    
+    showGlobalLoader(`Loading page ${paddedPage}…`);
+    loaderActive = true;
+    
+    try {
+        const page = await waitForPageReady(pageNumber);
+        if (page) {
+            page.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (allPagesLoaded && pageNumber > maxLoadedPageNumber) {
+            console.warn(`Requested page ${pageNumber} is not available.`);
+            hideGlobalLoader(`Page ${paddedPage} not found`);
+            loaderActive = false;
+        }
+    } finally {
+        if (loaderActive) {
+            hideGlobalLoader();
+        }
+    }
+}
+
+function setupHashNavigation() {
+    function handleHashChange() {
+        const match = window.location.hash.match(/^#page-(\d+)$/i);
+        if (match) {
+            const requestedPage = parseInt(match[1], 10);
+            handlePageNavigationRequest(requestedPage);
+        }
+    }
+    
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange();
+    
+    // Expose helper for imperative navigation
+    window.navigateToPortfolioPage = handlePageNavigationRequest;
 }
 
 // Helper function to check if image exists (with timeout)
@@ -247,52 +419,6 @@ function imageExists(url) {
         
         img.src = url;
     });
-}
-
-// ===== BUILD PORTFOLIO PAGES =====
-async function buildPortfolioPages() {
-    const container = document.getElementById('portfolio-container');
-    container.innerHTML = '';
-    hotspotElements = [];
-    
-    for (let index = 0; index < loadedImages.length; index++) {
-        const imageData = loadedImages[index];
-        
-        // Create page container with skeleton placeholder
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'portfolio-page loading';
-        pageDiv.setAttribute('data-page', imageData.pageNumber);
-        pageDiv.setAttribute('aria-busy', 'true');
-        
-        const skeleton = document.createElement('div');
-        skeleton.className = 'page-skeleton';
-        pageDiv.appendChild(skeleton);
-        container.appendChild(pageDiv);
-        observePageForAnimations(pageDiv);
-        
-        try {
-            const img = await loadImageSequential(imageData.path, imageData.pageNumber, index);
-            img.alt = `Portfolio Page ${imageData.pageNumber}`;
-            
-            pageDiv.classList.remove('loading');
-            pageDiv.setAttribute('aria-busy', 'false');
-            pageDiv.replaceChildren(img);
-            
-            attachHotspotsToPage(pageDiv, imageData.pageNumber);
-            registerPageForHotspotDiscovery(pageDiv);
-            repositionAllHotspots();
-        } catch (error) {
-            console.warn(`Failed to load image: ${imageData.path}`, error);
-            pageDiv.classList.add('load-error');
-            pageDiv.setAttribute('aria-busy', 'false');
-            pageDiv.innerHTML = `
-                <div class=\"page-fallback\">
-                    <div class=\"page-fallback-icon\">⚠️</div>
-                    <p>Unable to load this page.</p>
-                </div>
-            `;
-        }
-    }
 }
 
 function loadImageSequential(src, pageNumber, index) {
