@@ -1,0 +1,13 @@
+{
+  "name": "portfolio-framework",
+  "version": "1.0.0",
+  "description": "Automation and tooling for the portfolio loading regression checks.",
+  "private": true,
+  "scripts": {
+    "test:smoke": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.2"
+  }
+}
+

@@ -1,0 +1,105 @@
+/* ===== MOUSE ANIMATION STYLES ===== */
+/* 
+ * Companion CSS file for mouse.svg
+ * Contains all container-level animation styles for the mouse animation
+ * This file is loaded dynamically by animationManager.js
+ */
+
+/* Mouse animation uses standard animation container styling */
+/* SVG is appended directly and styled by global .page-animation svg rules */
+
+/* ===== ARROW DRAWING ANIMATION ===== */
+/* Animates the arrow to appear as if being drawn from bottom to top */
+
+/* Main path animation - draws first */
+/* Actual path length: ~37.6px */
+/* Drawing completes at 1.2s, cycle is 2.82s = 42.6% */
+@keyframes drawArrowMain {
+  0% {
+    stroke-dashoffset: 38; /* Fully hidden */
+  }
+  42.6% {  /* Complete at 1.2s of 2.82s cycle */
+    stroke-dashoffset: 0; /* Complete at same speed */
+  }
+  100% {
+    stroke-dashoffset: 0; /* Keep visible for 1.5s pause */
+  }
+}
+
+/* Arrowhead animation - starts when main path reaches connection point */
+/* Actual path length: ~10.05px */
+/* Drawing completes at 1.32s, cycle is 2.82s = 46.8% */
+@keyframes drawArrowHead {
+  0% {
+    stroke-dashoffset: 10; /* Fully hidden */
+    opacity: 0; /* Completely invisible */
+  }
+  41% {  /* Start drawing just before main path finishes (at 1.16s) */
+    stroke-dashoffset: 10; /* Still hidden */
+    opacity: 0; /* Still invisible */
+  }
+  41.2% {  /* Start appearing and drawing (at 1.18s) */
+    stroke-dashoffset: 10;
+    opacity: 1; /* Become visible */
+  }
+  46.8% {  /* Finish drawing at 1.32s of 2.82s cycle */
+    stroke-dashoffset: 0; /* Fully drawn at same speed */
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0; /* Keep visible for 1.5s pause */
+    opacity: 1;
+  }
+}
+
+/* Apply animations - use same easing for unified feel */
+/* Using actual path lengths: main=37.6px, arrowhead=10.05px */
+.page-animation.animation-mouse #arrow-main-path {
+  stroke-dasharray: 38;
+  animation: drawArrowMain 2.82s linear infinite; /* 2.82s duration - 1.5s visible pause after drawing */
+}
+
+.page-animation.animation-mouse #arrow-head-path {
+  stroke-dasharray: 10;
+  animation: drawArrowHead 2.82s linear infinite; /* 2.82s duration - 1.5s visible pause after drawing */
+}
+
+/* ===== STRIPES UPWARD MOVEMENT ANIMATION ===== */
+/* Moves continuously throughout entire cycle, synchronized with arrow */
+@keyframes moveStripesUp {
+  0% {
+    transform: translateY(0); /* Starting position */
+  }
+  100% {
+    transform: translateY(-28px); /* Move up 12px */
+  }
+}
+
+/* Apply animation to stripes group - continuous upward movement */
+.page-animation.animation-mouse #stripes {
+  animation: moveStripesUp 2.82s linear infinite; /* Same duration and timing as arrow */
+}
+
+/* ===== HIDE ANIMATION ON ZOOM ===== */
+/* Base transition for smooth fade-out - overrides global .page-animation transition */
+.page-animation.animation-mouse {
+  transition: opacity 1.5s ease-out;
+}
+
+/* Pause all child animations when hiding to prevent conflicts */
+.page-animation.animation-mouse.animation-hidden #arrow-main-path,
+.page-animation.animation-mouse.animation-hidden #arrow-head-path,
+.page-animation.animation-mouse.animation-hidden #stripes {
+  animation-play-state: paused;
+}
+
+/* Hide animation on zoom - smooth fade-out */
+.page-animation.animation-mouse.animation-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Ensure animation stays hidden after fade-out */
+.page-animation.animation-mouse.animation-hidden-permanent {
+  display: none;
+}

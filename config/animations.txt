@@ -1,0 +1,29 @@
+# Animation Configuration File
+# Format: page_number, centerX%, centerY%, size%, icon_filename, duration_ms, delay_ms, trigger_type
+#
+# Parameters:
+# - page_number: Which page (starts at 1)
+# - centerX%: Horizontal center point (percentage, 0-100, where 50 = middle)
+# - centerY%: Vertical center point (percentage, 0-100, where 50 = middle)
+# - size%: Width as percentage of container (any positive number, e.g., 30, 100, 150)
+#   * Height is calculated automatically from the SVG's aspect ratio
+#   * Values > 100% are allowed for oversized animations (will be clipped at page edges)
+# - icon_filename: Name of SVG file in assets/icons/ folder (e.g., "mouse.svg")
+# - duration_ms: How long animation stays visible before auto-hiding (milliseconds)
+# - delay_ms: Delay before animation appears (optional, default 0)
+# - trigger_type: When animation should start (optional, default "visible")
+#   * "hover" = Animation triggers when mouse hovers over the page (desktop only)
+#   * "visible" = Animation triggers when page becomes visible in viewport (default)
+#
+# Note: All position and size values use percentages to ensure consistent scaling across screen sizes
+# Note: Height is automatically calculated from the SVG's viewBox aspect ratio
+# Note: If trigger_type is not specified, defaults to "visible" for backwards compatibility
+# Note: Animations with size > 100% will be clipped at the page edges due to parent container's overflow: hidden
+#       This is expected behavior - the animation extends beyond the page boundaries and gets clipped
+#
+# Example: 2, 50, 50, 30, mouse.svg, 60000, 1000, visible
+#   - Page 2, centered at (50%, 50%), size 30% width, height calculated automatically
+#   - Size can be > 100% (e.g., 150, 200) for oversized animations that extend beyond page edges
+
+# Page 2: Mouse animation, centered position
+2, 50, 50, 110, mouse.svg, 200000, 1000, visible

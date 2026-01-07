@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Joshua Barzideh's portfolio showcasing selected architecture and design works with interactive video presentations.">
+    <meta name="author" content="Joshua Barzideh">
+    <title>Joshua Barzideh - Selected Works</title>
+    <!-- Critical CSS - Inlined for immediate rendering -->
+    <style>
+        /* Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            color: #333333;
+            line-height: 1.6;
+        }
+
+        /* Global Loading Overlay */
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            background: rgba(243, 239, 233, 0.92);
+            backdrop-filter: blur(4px);
+            z-index: 5000;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        #loading-overlay.is-hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        #loading-overlay .loader {
+            display: inline-flex;
+            font-size: 0;
+            white-space: nowrap;
+        }
+
+        #loading-overlay .loader .ball {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin: 0 6px;
+            border-radius: 50%;
+            background-color: #333333;
+            animation: loader-bounce 1.3s infinite ease-in-out;
+        }
+
+        #loading-overlay .loader .ball:nth-child(2) {
+            animation-delay: -0.5s;
+        }
+
+        #loading-overlay .loader .ball:nth-child(3) {
+            animation-delay: -1s;
+        }
+
+        /* Page Loader (for individual pages loading) */
+        .portfolio-page.loading .page-loader {
+            width: 100%;
+            aspect-ratio: 2 / 1;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(243, 239, 233, 0.3);
+        }
+
+        .portfolio-page.loading .page-loader .loader {
+            display: inline-flex;
+            font-size: 0;
+            white-space: nowrap;
+        }
+
+        .portfolio-page.loading .page-loader .loader .ball {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin: 0 6px;
+            border-radius: 50%;
+            background-color: #333333;
+            animation: loader-bounce 1.3s infinite ease-in-out;
+        }
+
+        .portfolio-page.loading .page-loader .loader .ball:nth-child(2) {
+            animation-delay: -0.5s;
+        }
+
+        .portfolio-page.loading .page-loader .loader .ball:nth-child(3) {
+            animation-delay: -1s;
+        }
+
+        /* Bouncing Animation Keyframes */
+        @keyframes loader-bounce {
+            0%, 100% {
+                transform: translateY(2px);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+
+        /* Utility Classes */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            border: 0;
+            white-space: nowrap;
+        }
+    </style>
+    <!-- Non-critical CSS - Load asynchronously in background -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.css"></noscript>
+    <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
+    <!-- Polyfill for browsers that don't support rel="preload" onload -->
+    <script>
+      /*! loadCSS polyfill. [c]2017 Filament Group, Inc. MIT License */
+      (function(w){
+        "use strict";
+        var loadCSS = function(href, before, media, attributes){
+          var doc = w.document;
+          var ss = doc.createElement("link");
+          var ref;
+          if(before){
+            ref = before;
+          } else {
+            var refs = (doc.body || doc.getElementsByTagName("head")[0]).childNodes;
+            ref = refs[refs.length - 1];
+          }
+          var sheets = doc.styleSheets;
+          ss.rel = "stylesheet";
+          ss.href = href;
+          ss.media = "only x";
+          if(attributes){
+            for(var i in attributes){
+              if(attributes.hasOwnProperty(i)){
+                ss.setAttribute(i, attributes[i]);
+              }
+            }
+          }
+          function ready(cb){
+            if(doc.body){
+              return cb();
+            }
+            setTimeout(function(){
+              ready(cb);
+            });
+          }
+          ready(function(){
+            ref.parentNode.insertBefore(ss, before ? ref : ref.nextSibling);
+          });
+          var onloadcssdefined = function(cb){
+            var resolvedHref = ss.href;
+            var i = sheets.length;
+            while(i--){
+              if(sheets[i].href === resolvedHref){
+                return cb();
+              }
+            }
+            setTimeout(function(){
+              onloadcssdefined(cb);
+            });
+          };
+          function loadCB(){
+            if(ss.addEventListener){
+              ss.removeEventListener("load", loadCB);
+            }
+            ss.media = media || "all";
+          }
+          if(ss.addEventListener){
+            ss.addEventListener("load", loadCB);
+          }
+          ss.onloadcssdefined = onloadcssdefined;
+          onloadcssdefined(loadCB);
+          return ss;
+        };
+        if(typeof exports !== "undefined"){
+          exports.loadCSS = loadCSS;
+        } else {
+          w.loadCSS = loadCSS;
+        }
+      }(typeof global !== "undefined" ? global : this));
+      
+      /*! onloadCSS polyfill. [c]2017 Filament Group, Inc. MIT License */
+      (function(w){
+        "use strict";
+        var onloadCSS = function(ss, callback){
+          function resolve(){
+            if(ss.addEventListener){
+              ss.removeEventListener("load", resolve);
+            }
+            callback(ss);
+          }
+          if("isPropertySupported" in ss && ss.isPropertySupported("onload")){
+            ss.addEventListener("load", resolve);
+          } else {
+            var poll = function(){
+              if(ss.sheet && ss.sheet.cssRules && ss.sheet.cssRules.length){
+                resolve();
+              } else {
+                setTimeout(poll, 20);
+              }
+            };
+            poll();
+          }
+        };
+        if(typeof exports !== "undefined"){
+          exports.onloadCSS = onloadCSS;
+        } else {
+          w.onloadCSS = onloadCSS;
+        }
+      }(typeof global !== "undefined" ? global : this));
+      
+      /* Polyfill for browsers that don't support rel="preload" onload */
+      if(!("onload" in document.createElement("link"))){
+        var links = document.querySelectorAll('link[rel="preload"][as="style"]');
+        for(var i = 0; i < links.length; i++){
+          var link = links[i];
+          var href = link.href;
+          var media = link.media || "all";
+          loadCSS(href, link, media);
+          onloadCSS(link, function(css){
+            css.rel = "stylesheet";
+          });
+        }
+      }
+    </script>
+    <link rel="icon" type="image/png" href="favicon.png">
+</head>
+<body>
+    <div id="loading-overlay" role="status" aria-live="polite" aria-busy="true">
+        <div class="loader" aria-hidden="true">
+            <span class="ball"></span>
+            <span class="ball"></span>
+            <span class="ball"></span>
+        </div>
+        <p class="loading-overlay-label visually-hidden">Loading content…</p>
+    </div>
+
+    <!-- Main Portfolio Container -->
+    <!-- Pages will be dynamically loaded from the images/ folder -->
+    <main id="main-content">
+        <div class="portfolio-container" id="portfolio-container">
+            <!-- Dynamic content will be inserted here by script.js -->
+        </div>
+    </main>
+
+    <!-- YouTube Modal -->
+    <div id="youtube-modal" class="modal" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="youtube-modal-title">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <h2 id="youtube-modal-title" class="visually-hidden">Video player</h2>
+            <button class="modal-close" aria-label="Close video">&times;</button>
+            <div class="video-container">
+                <iframe id="youtube-player" 
+                        src="" 
+                        title="YouTube video player"
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/zoomist@2/zoomist.umd.js" defer></script>
+    <!-- Core configuration and utilities -->
+    <script src="config.js" defer></script>
+    <script src="utils/errorHandler.js" defer></script>
+    <script src="utils/validation.js" defer></script>
+    <script src="utils/dom.js" defer></script>
+    <script src="utils/loader.js" defer></script>
+    <script src="utils/debugTracker.js" defer></script>
+    <script src="utils/namespace.js" defer></script>
+    <!-- State management -->
+    <script src="state/AppState.js" defer></script>
+    <!-- Application modules -->
+    <script src="modules/animationController.js" defer></script>
+    <script src="modules/animationManager.js" defer></script>
+    <script src="modules/hotspotManager.js" defer></script>
+    <script src="modules/imageLoader.js" defer></script>
+    <script src="modules/zoomistController.js" defer></script>
+    <script src="modules/modalController.js" defer></script>
+    <script src="modules/pageRenderer.js" defer></script>
+    <script src="modules/navigationController.js" defer></script>
+    <script src="modules/performanceOptimizer.js" defer></script>
+    <!-- Main application orchestrator -->
+    <script src="script.js" defer></script>
+</body>
+</html>
+

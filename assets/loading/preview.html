@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bouncing Dots Loader Preview</title>
+    <link rel="stylesheet" href="bouncing-dots.css">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-content: center;
+            background: radial-gradient(circle at top, #f4f1ea 0%, #ece6da 55%, #dfd7c7 100%);
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+
+        .card {
+            padding: 32px 44px;
+            border-radius: 22px;
+            background: #fffdf8;
+            box-shadow:
+                0 18px 40px -28px rgba(26, 17, 5, 0.55),
+                0 14px 28px -18px rgba(26, 17, 5, 0.35);
+            border: 1px solid rgba(210, 192, 150, 0.35);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="loader" aria-label="Bouncing dots loading indicator">
+            <span class="ball"></span>
+            <span class="ball"></span>
+            <span class="ball"></span>
+        </div>
+    </div>
+</body>
+</html>
+
