@@ -11,7 +11,7 @@ Showcase your work with a single-page scrolling experience that feels exactly th
 - `config.js` – Centralized configuration constants
 - `config/hotspots.txt` – Simple text file where you list any clickable YouTube areas
 - `config/animations.txt` – Animation configuration file
-- `images/` – Place your PNG pages here (named with numbers, e.g., `page_01.png`)
+- `images/` – Place your image pages here (AVIF, WebP, or PNG) (named with numbers, e.g., `page_01.avif`, `page_01.webp`, or `page_01.png`)
 
 ### Directory Structure
 ```
@@ -57,12 +57,18 @@ Portfolio_framework-main/
 The site automatically discovers your images:
 
 - Place your images in the `images/` folder
-- Name them with numbers: `page01.png`, `page02.png`, etc.
-- Supported formats: PNG
+- Name them with numbers: `page01.avif`, `page01.webp`, `page01.png`, etc.
+- Supported formats: AVIF (primary, best compression), WebP (fallback, broad support), PNG (final fallback, universal support)
+- **Format options**: You can provide images in any combination:
+  - **Best**: Provide both AVIF and WebP (maximum compatibility and compression)
+  - **Simple**: Provide only WebP (good compression, 97% browser support)
+  - **Compatible**: Provide only PNG (works everywhere, larger files)
+  - **Mixed**: Any combination works - system automatically selects best available format
 - Works with various naming patterns:
-  - `page_01.png`, `page01.png`
-  - `image01.png`, `slide01.png`
-  - `01.png`, `001.png` (just numbers with or without leading zeroes)
+  - `page_01.avif`, `page_01.webp`, `page_01.png`
+  - `page01.avif`, `page01.webp`, `page01.png`
+  - `image01.avif`, `slide01.webp`, etc.
+  - Files should be named identically except for extension (e.g., `page_01.avif`, `page_01.webp`, `page_01.png`)
 - The site automatically finds them and displays in numerical order
 
 ### 2. Hotspots are managed in `config/hotspots.txt`
@@ -113,7 +119,7 @@ What the parameters mean:
 The corresponding CSS file (e.g., `assets/icons/mouse.css`) will be automatically loaded if it exists.
 
 ## 🔄 Update Your Portfolio (No Code)
-1. **Add/remove images:** Drop files in `images/` folder (use numbered names like `page_01.png`, `page_02.png`)
+1. **Add/remove images:** Drop files in `images/` folder (use numbered names like `page_01.avif`, `page_01.webp`, or `page_01.png`)
 2. **Change hotspots:** Edit `config/hotspots.txt` to adjust clickable areas
 3. **Change animations:** Edit `config/animations.txt` to add or modify page animations
 4. **See changes:** Refresh the page—no code editing needed!
@@ -132,6 +138,26 @@ Open `http://localhost:8000` in your browser.
 Install the extension, open the project, right-click `index.html`, choose **Open with Live Server**.
 
 Once hosted over HTTP, the hotspots load correctly.
+
+### Converting Images to AVIF/WebP
+
+To optimize your portfolio images, convert PNG files to AVIF and WebP formats:
+
+**Recommended Tools:**
+- **Squoosh** (https://squoosh.app) - Web-based, easy to use, no installation
+- **ImageMagick** - Command line: `magick input.png -quality 80 output.avif`
+- **XnConvert** - Free batch converter with GUI (Windows/Mac/Linux)
+
+**Recommended Quality Settings:**
+- **AVIF**: Quality 60-80 (visually lossless at ~70, excellent compression)
+- **WebP**: Quality 75-85 (good balance of quality and file size)
+
+**Workflow:**
+1. Keep original PNG files as backup
+2. Convert to AVIF (for modern browsers)
+3. Convert to WebP (for broader compatibility)
+4. Place all three formats in `images/` folder with same base name
+5. System automatically selects best format for each browser
 
 ## 🌐 Deploy to GitHub Pages
 1. Create a new GitHub repository (Public).
@@ -157,7 +183,7 @@ Once hosted over HTTP, the hotspots load correctly.
 - Colors, fonts, or animation tweaks live in `styles.css`
 - CSS custom properties (variables) are defined in `:root` for easy customization
 - Want to highlight a hotspot in words? Add a caption directly into the image so it stays perfectly aligned
-- Keep each image under ~5 MB for faster loading
+- Keep each image under ~5 MB for faster loading (AVIF files will be significantly smaller)
 
 ### Configuration
 - Edit `config.js` to adjust application settings:
@@ -205,9 +231,9 @@ The application exposes a public API through the `window.PortfolioApp` namespace
 ## 🛠️ Troubleshooting
 - **Hotspots missing locally?** Run the site through a local server (see "Preview Locally").
 - **A new page isn't showing?** 
-  - Check that the filename has a number (e.g., `page01.png` not `mypage.png`)
-  - Use consistent numbering (`page_01.png`, `page_02.png`, etc.)
-  - Supported formats: PNG, JPG, JPEG, GIF, WEBP
+  - Check that the filename has a number (e.g., `page01.avif` not `mypage.avif`)
+  - Use consistent numbering (`page_01.avif`, `page_02.webp`, etc.)
+  - Supported formats: AVIF (primary), WebP (fallback), PNG (final fallback)
 - **Video won't play?** Make sure the YouTube link is public and copied correctly into `config/hotspots.txt`.
 - **Images loading in wrong order?** Rename files with consistent numbering (`01`, `02`, `03`...) to ensure correct order.
 - **Hotspots too small on mobile?** They automatically scale up 3-4x on phones; test in actual device or browser dev tools mobile view.
@@ -215,4 +241,4 @@ The application exposes a public API through the `window.PortfolioApp` namespace
 - **Animation not appearing?** Check that the icon file exists in `assets/icons/` and the configuration in `config/animations.txt` is correct.
 
 ## ❤️ Credits
-Built with pure HTML, CSS, and JavaScript. Drop in new images, adjust `hotspots.txt`, and the site stays fresh with zero coding.
+Built with pure HTML, CSS, and JavaScript. Drop in new images (AVIF, WebP, or PNG), adjust `hotspots.txt`, and the site stays fresh with zero coding.

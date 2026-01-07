@@ -8,8 +8,8 @@ Use this checklist after updating assets or code to confirm the interactive port
 - Verify no errors appear in the browser console.
 
 ## 2. Image Rendering
-- Confirm numbered files (`page_01.png`, etc.) auto-load in ascending order.
-- Rename one image to a supported alternative pattern (e.g., `image01.jpg`) and confirm it is discovered.
+- Confirm numbered files (`page_01.avif`, `page_01.webp`, or `page_01.png`, etc.) auto-load in ascending order.
+- Test format fallback: Verify AVIF loads when both AVIF and WebP exist, WebP loads when AVIF missing, PNG loads when both missing.
 - Confirm missing files log warnings without breaking other images.
 
 ## 3. Hotspots

@@ -9,7 +9,9 @@ const CONFIG = {
         MAX_PAGES: 100,
         MAX_CONSECUTIVE_FAILURES: 5,
         TIMEOUT_MS: 5000,
-        EXTENSIONS: ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+        // Format priority: tried in order, first successful format cached for subsequent pages
+        // PNG included as final fallback for backward compatibility
+        FORMAT_PRIORITY: ['avif', 'webp', 'png'],
         FILENAME_PATTERN: 'page_',
         FILENAME_PADDING: 2
     },

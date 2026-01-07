@@ -5,79 +5,145 @@
 
 // Initialization debug tracking is now handled by DebugTracker module
 
+// Format consistency optimization: remember which format worked
+let preferredFormat = null;
+
 /**
  * Find an image candidate for a given page number
  * Uses fetch() to load images directly with status code checking for robust error handling
+ * Tries formats in priority order (AVIF → WebP → PNG) with format consistency optimization
  * @param {number} pageNumber - Page number to find
  * @returns {Promise<Object|null>} Image data with imageElement or null
  */
 async function findImageCandidate(pageNumber) {
-    const paddedTwo = String(pageNumber).padStart(CONFIG.IMAGE.FILENAME_PADDING, '0');
-    const filename = `${CONFIG.IMAGE.FILENAME_PATTERN}${paddedTwo}.png`;
-    const imagePath = `${CONFIG.IMAGE.FOLDER}${filename}`;
-
-    const abortController = new AbortController();
-    const timeoutId = setTimeout(() => abortController.abort(), CONFIG.IMAGE.TIMEOUT_MS);
-
-    try {
-        const response = await fetch(imagePath, { 
-            signal: abortController.signal,
-            cache: 'default' // Allow browser caching
-        });
-        clearTimeout(timeoutId);
-
-        if (response.status === 404) {
-            // File doesn't exist - end of portfolio
-            ErrorHandler.log(`Page ${pageNumber} not found (404) - end of portfolio`);
-            return null;
-        }
-
-        if (response.status === 200) {
-            // Image exists - create Image element from blob
-            const blob = await response.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            
-            const img = new Image();
-            img.className = 'portfolio-image';
-            img.decoding = 'async';
-            
-            // Wait for image to load from blob URL
-            await new Promise((resolve, reject) => {
-                img.onload = () => {
-                    if (img.complete && img.naturalWidth > 0) {
-                        resolve();
-                    } else {
-                        reject(new Error('Image loaded but not complete'));
-                    }
-                };
-                img.onerror = () => reject(new Error('Failed to load image from blob URL'));
-                img.src = blobUrl;
-            });
-
-            return {
-                path: imagePath,
-                name: filename,
-                imageElement: img
-            };
-        }
-
-        // Other HTTP errors (500, 503, 502, 403, etc.)
-        ErrorHandler.warn(`Server error loading ${imagePath}: ${response.status} ${response.statusText}`);
-        return null;
-
-    } catch (error) {
-        clearTimeout(timeoutId);
-        
-        if (error.name === 'AbortError') {
-            ErrorHandler.warn(`Timeout loading ${imagePath} (${CONFIG.IMAGE.TIMEOUT_MS}ms)`);
-        } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-            // Network error (CORS, connection refused, etc.)
-            ErrorHandler.warn(`Network error loading ${imagePath}: ${error.message}`);
-        } else {
-            ErrorHandler.warn(`Error loading ${imagePath}: ${error.message}`);
-        }
+    // Validate format priority configuration
+    if (!CONFIG.IMAGE.FORMAT_PRIORITY || !Array.isArray(CONFIG.IMAGE.FORMAT_PRIORITY) || CONFIG.IMAGE.FORMAT_PRIORITY.length === 0) {
+        ErrorHandler.error('CONFIG.IMAGE.FORMAT_PRIORITY is not configured or is empty');
         return null;
     }
+    
+    const paddedTwo = String(pageNumber).padStart(CONFIG.IMAGE.FILENAME_PADDING, '0');
+    const baseFilename = `${CONFIG.IMAGE.FILENAME_PATTERN}${paddedTwo}`;
+    const attemptedFormats = [];
+    
+    // Helper function to try a specific format
+    const tryFormat = async (format) => {
+        const filename = `${baseFilename}.${format}`;
+        const imagePath = `${CONFIG.IMAGE.FOLDER}${filename}`;
+        attemptedFormats.push(format);
+        
+        const abortController = new AbortController();
+        const timeoutId = setTimeout(() => abortController.abort(), CONFIG.IMAGE.TIMEOUT_MS);
+        
+        let blobUrl = null;
+        let img = null;
+        
+        try {
+            const response = await fetch(imagePath, {
+                signal: abortController.signal,
+                cache: 'default'
+            });
+            clearTimeout(timeoutId);
+            
+            if (response.status === 404) {
+                // File doesn't exist for this format
+                return null;
+            }
+            
+            if (response.status >= 500) {
+                // Transient server error - try next format
+                ErrorHandler.warn(`Server error loading ${imagePath} (${response.status}), trying next format`);
+                return null;
+            }
+            
+            if (response.status === 200) {
+                // File exists - try to decode
+                const blob = await response.blob();
+                blobUrl = URL.createObjectURL(blob);
+                
+                img = new Image();
+                img.className = 'portfolio-image';
+                img.decoding = 'async';
+                
+                // Attempt to decode image (will fail if browser doesn't support format)
+                await new Promise((resolve, reject) => {
+                    img.onload = () => {
+                        if (img.complete && img.naturalWidth > 0) {
+                            resolve();
+                        } else {
+                            reject(new Error('Image loaded but not complete'));
+                        }
+                    };
+                    img.onerror = () => reject(new Error(`Browser does not support ${format} format`));
+                    img.src = blobUrl;
+                });
+                
+                // Success - return image data (don't revoke blobUrl, img.src needs it)
+                return {
+                    path: imagePath,
+                    name: filename,
+                    imageElement: img,
+                    format: format
+                };
+            }
+            
+            // Other HTTP errors (403, 401, etc.) - try next format
+            ErrorHandler.warn(`Error loading ${imagePath} (${response.status}), trying next format`);
+            return null;
+            
+        } catch (error) {
+            clearTimeout(timeoutId);
+            
+            // Clean up on failure
+            if (blobUrl) URL.revokeObjectURL(blobUrl);
+            if (img) {
+                img.onload = null;
+                img.onerror = null;
+                img.src = '';
+            }
+            
+            if (error.name === 'AbortError') {
+                ErrorHandler.warn(`Timeout loading ${format} format (${CONFIG.IMAGE.TIMEOUT_MS}ms), trying fallback`);
+            } else if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+                ErrorHandler.warn(`Network error loading ${format} format: ${error.message}, trying fallback`);
+            } else if (error.message.includes('does not support')) {
+                // Format decode failure - expected, try next format
+                if (CONFIG.DEBUG.ENABLED) {
+                    ErrorHandler.log(`Browser does not support ${format} format, trying fallback`);
+                }
+            } else {
+                ErrorHandler.warn(`Error loading ${format} format: ${error.message}, trying fallback`);
+            }
+            
+            return null;
+        }
+    };
+    
+    // Try preferred format first (if we know one that works)
+    if (preferredFormat) {
+        const result = await tryFormat(preferredFormat);
+        if (result) {
+            return result; // Preferred format worked!
+        }
+        // Preferred format failed - might be end of portfolio or format inconsistency
+        // Fall through to try all formats to be safe
+    }
+    
+    // Try each format in priority order (skip preferred if already tried)
+    for (const format of CONFIG.IMAGE.FORMAT_PRIORITY) {
+        if (format === preferredFormat) continue; // Already tried
+        
+        const result = await tryFormat(format);
+        if (result) {
+            // Success! Remember this format for future pages
+            preferredFormat = format;
+            return result;
+        }
+    }
+    
+    // All formats failed
+    ErrorHandler.log(`Page ${pageNumber} not found in any format (${attemptedFormats.join(', ')}) - end of portfolio`);
+    return null;
 }
 
 /**
@@ -111,7 +177,8 @@ function createAutoLoader() {
                     const result = {
                         path: candidate.path,
                         pageNumber: pageToCheck,
-                        name: candidate.name
+                        name: candidate.name,
+                        format: candidate.format
                     };
                     // Include image element if available (loaded via fetch)
                     if (candidate.imageElement) {
