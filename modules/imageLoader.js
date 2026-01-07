@@ -29,7 +29,7 @@ async function findImageCandidate(pageNumber) {
     // Helper function to try a specific format
     const tryFormat = async (format) => {
         const filename = `${baseFilename}.${format}`;
-        const imagePath = `${CONFIG.IMAGE.FOLDER}${filename}`;
+        const imagePath = `${CONFIG.IMAGE.FOLDER}${format}/${filename}`;
         attemptedFormats.push(format);
         
         const abortController = new AbortController();

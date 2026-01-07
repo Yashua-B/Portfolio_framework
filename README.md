@@ -11,7 +11,7 @@ Showcase your work with a single-page scrolling experience that feels exactly th
 - `config.js` – Centralized configuration constants
 - `config/hotspots.txt` – Simple text file where you list any clickable YouTube areas
 - `config/animations.txt` – Animation configuration file
-- `images/` – Place your image pages here (AVIF, WebP, or PNG) (named with numbers, e.g., `page_01.avif`, `page_01.webp`, or `page_01.png`)
+- `images/` – Place your image pages here, organized by format in subfolders (e.g., `images/avif/page_01.avif`, `images/webp/page_01.webp`, `images/png/page_01.png`)
 
 ### Directory Structure
 ```
@@ -56,7 +56,11 @@ Portfolio_framework-main/
 ### 1. Images load automatically
 The site automatically discovers your images:
 
-- Place your images in the `images/` folder
+- Place your images in the `images/` folder, organized by format in subfolders
+- **Folder structure**: Create subfolders for each format:
+  - `images/avif/` – Place AVIF files here (e.g., `page_01.avif`, `page_02.avif`)
+  - `images/webp/` – Place WebP files here (e.g., `page_01.webp`, `page_02.webp`)
+  - `images/png/` – Place PNG files here (e.g., `page_01.png`, `page_02.png`)
 - Name them with numbers: `page01.avif`, `page01.webp`, `page01.png`, etc.
 - Supported formats: AVIF (primary, best compression), WebP (fallback, broad support), PNG (final fallback, universal support)
 - **Format options**: You can provide images in any combination:
@@ -64,11 +68,7 @@ The site automatically discovers your images:
   - **Simple**: Provide only WebP (good compression, 97% browser support)
   - **Compatible**: Provide only PNG (works everywhere, larger files)
   - **Mixed**: Any combination works - system automatically selects best available format
-- Works with various naming patterns:
-  - `page_01.avif`, `page_01.webp`, `page_01.png`
-  - `page01.avif`, `page01.webp`, `page01.png`
-  - `image01.avif`, `slide01.webp`, etc.
-  - Files should be named identically except for extension (e.g., `page_01.avif`, `page_01.webp`, `page_01.png`)
+- Files should be named identically across format folders (e.g., `images/avif/page_01.avif`, `images/webp/page_01.webp`, `images/png/page_01.png`)
 - The site automatically finds them and displays in numerical order
 
 ### 2. Hotspots are managed in `config/hotspots.txt`
@@ -119,7 +119,7 @@ What the parameters mean:
 The corresponding CSS file (e.g., `assets/icons/mouse.css`) will be automatically loaded if it exists.
 
 ## 🔄 Update Your Portfolio (No Code)
-1. **Add/remove images:** Drop files in `images/` folder (use numbered names like `page_01.avif`, `page_01.webp`, or `page_01.png`)
+1. **Add/remove images:** Drop files in the appropriate format subfolders (`images/avif/`, `images/webp/`, or `images/png/`) with numbered names like `page_01.avif`, `page_01.webp`, or `page_01.png`
 2. **Change hotspots:** Edit `config/hotspots.txt` to adjust clickable areas
 3. **Change animations:** Edit `config/animations.txt` to add or modify page animations
 4. **See changes:** Refresh the page—no code editing needed!
@@ -156,8 +156,12 @@ To optimize your portfolio images, convert PNG files to AVIF and WebP formats:
 1. Keep original PNG files as backup
 2. Convert to AVIF (for modern browsers)
 3. Convert to WebP (for broader compatibility)
-4. Place all three formats in `images/` folder with same base name
-5. System automatically selects best format for each browser
+4. Organize files in format subfolders:
+   - Place AVIF files in `images/avif/` folder
+   - Place WebP files in `images/webp/` folder
+   - Place PNG files in `images/png/` folder
+5. Use same base name across formats (e.g., `page_01.avif`, `page_01.webp`, `page_01.png`)
+6. System automatically selects best format for each browser
 
 ## 🌐 Deploy to GitHub Pages
 1. Create a new GitHub repository (Public).
